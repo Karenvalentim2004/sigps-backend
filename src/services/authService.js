@@ -1,9 +1,34 @@
 const connection = require('../database/db')
 const bcrypt = require('bcrypt')
+
+exports.register = (nome, email, senha, identificar) => {
+    return new Promise(async (resolve, reject) => {
+
+        const hashedsenha = await bcrypt.hash(senha, 10)
+
+        connection.query(
+            'INSERT INTO users (nome, email, senha, identificar) VALUES (?, ?, ?, ?)',
+            [nome, email, hashedsenha, identificar],
+            (err, result) => {
+                if (err) return reject(err)
+
+                resolve({
+                    id: result.insertId,
+                    nome,
+                    email,
+                    identificar
+                })
+            }
+        )
+    })
+}
+
+
 const jwt = require('jsonwebtoken')
 
-exports.login = (email, password) => {
+exports.login = (email, senha) => {
     return new Promise((resolve, reject) => {
+
         connection.query(
             'SELECT * FROM users WHERE email = ?',
             [email],
@@ -16,15 +41,15 @@ exports.login = (email, password) => {
 
                 const user = results[0]
 
-                const validPassword = await bcrypt.compare(password, user.password)
+                const senhaValida = await bcrypt.compare(senha, user.senha)
 
-                if (!validPassword) {
+                if (!senhaValida) {
                     return reject(new Error('Senha inválida'))
                 }
 
                 const token = jwt.sign(
-                    { id: user.id, role: user.role },
-                    'segredo',
+                    { id: user.id, identificar: user.identificar },
+                    'segredo', // depois vamos melhorar isso
                     { expiresIn: '1d' }
                 )
 
@@ -32,9 +57,9 @@ exports.login = (email, password) => {
                     token,
                     user: {
                         id: user.id,
-                        name: user.name,
+                        nome: user.nome,
                         email: user.email,
-                        role: user.role
+                        identificar: user.identificar
                     }
                 })
             }
