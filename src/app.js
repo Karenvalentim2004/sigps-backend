@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
 app.use(express.json());
+app.use(cors());
 
 // Importando rotas
 const authRoutes = require('./routes/auth.routes');
@@ -17,4 +19,4 @@ app.use('/api/agendamentos', agendamentoRoutes)
 app.use('/api/prontuarios', prontuarioRoutes)
 app.use('/api/relatorios', relatorioRoutes)
 
-module.exports = app
+module.exports = app  
