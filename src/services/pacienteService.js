@@ -3,14 +3,14 @@ const connection = require('../database/db')
 // Criar paciente
 exports.create = (paciente) => {
     return new Promise((resolve, reject) => {
-        const { nome, cpf, data_nascimento, telefone, endereco } = paciente
+        const { nome, email, cpf, data_nascimento, telefone, endereco } = paciente
 
         connection.query(
-            'INSERT INTO pacientes (nome, cpf, data_nascimento, telefone, endereco) VALUES (?, ?, ?, ?, ?)',
-            [nome, cpf, data_nascimento, telefone, endereco],
+            'INSERT INTO pacientes (nome, email, cpf, data_nascimento, telefone, endereco) VALUES (?, ?, ?, ?, ?, ?)',
+            [nome, email, cpf, data_nascimento, telefone, endereco],
             (err, result) => {
                 if (err) return reject(err)
-
+                console.dir(result)
                 resolve({ id: result.insertId, ...paciente })
             }
         )
@@ -47,11 +47,11 @@ exports.findById = (id) => {
 // Atualizar
 exports.update = (id, paciente) => {
     return new Promise((resolve, reject) => {
-        const { nome, telefone, endereco } = paciente
+        const { nome, email, telefone, endereco } = paciente
 
         connection.query(
-            'UPDATE pacientes SET nome = ?, telefone = ?, endereco = ? WHERE id = ?',
-            [nome, telefone, endereco, id],
+            'UPDATE pacientes SET nome = ?, email = ?, telefone = ?, endereco = ? WHERE id = ?',
+            [nome, email, telefone, endereco, id],
             (err) => {
                 if (err) return reject(err)
                 resolve({ id, ...paciente })

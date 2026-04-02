@@ -20,3 +20,4 @@ app.use('/api/prontuarios', prontuarioRoutes)
 app.use('/api/relatorios', relatorioRoutes)
 
 module.exports = app  
+ 
