@@ -13,4 +13,12 @@ router.post(
     agendamentoController.create
 )
 
+//Listar
+router.get(
+    '/',
+    authMiddleware,
+    identificarMiddleware(['recepcionista']),
+    agendamentoController.getAll
+)
+
 module.exports = router
