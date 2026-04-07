@@ -5,6 +5,10 @@ const cors = require('cors');
 app.use(express.json());
 app.use(cors());
 
+app.get("/", (req, res) => {
+  res.send("API SIGPS rodando 🚀");
+});
+
 // Importando rotas
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
