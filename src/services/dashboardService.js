@@ -2,16 +2,16 @@ const connection = require('../database/db');
 
 // TOTAL
 exports.getDashboardTotals = async () => {
-  const [rows] = await connection.promise().query(
-    "SELECT COUNT(*) as total FROM agendamento"
+  const [rows] = await connection.query(
+    "SELECT COUNT(*) as total FROM agendamentos"
   );
   return rows;
 };
 
 // POR STATUS
 exports.getDashboardByStatus = async (status) => {
-  const [rows] = await connection.promise().query(
-    "SELECT COUNT(*) as total FROM agendamento WHERE status = ?",
+  const [rows] = await connection.query(
+    "SELECT COUNT(*) as total FROM agendamentos WHERE status = ?",
     [status]
   );
   return rows;
@@ -19,11 +19,11 @@ exports.getDashboardByStatus = async (status) => {
 
 // POR DIA
 exports.getDashboardByDay = async () => {
-  const [rows] = await connection.promise().query(`
+  const [rows] = await connection.query(`
     SELECT 
       DATE(data) as dia,
       COUNT(*) as total
-    FROM agendamento
+    FROM agendamentos
     GROUP BY DATE(data)
     ORDER BY dia ASC
   `);

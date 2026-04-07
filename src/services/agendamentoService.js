@@ -1,97 +1,89 @@
 const connection = require('../database/db')
 
-// Cria agendamento
-exports.create = (agendamento) => {
-  return new Promise((resolve, reject) => {
+// 🔹 CRIAR AGENDAMENTO
+exports.create = async (agendamento) => {
+  const { paciente_id, profissional_id, data, hora, status } = agendamento;
 
-    const { paciente_id, profissional_id, data, hora, status } = agendamento
+  // Verifica se já existe no mesmo horário
+  const [existente] = await connection.query(
+    `SELECT * FROM agendamentos 
+     WHERE profissional_id = ? 
+     AND data = ? 
+     AND hora = ? 
+     AND status = "agendado"`,
+    [profissional_id, data, hora]
+  );
 
-    // Bloqueia horario já ocupado
-    connection.query(
-      `SELECT * FROM agendamentos 
-       WHERE profissional_id = ? 
-       AND data = ? 
-       AND hora = ? 
-       AND status = "agendado"`,
-      [profissional_id, data, hora],
-      (err, results) => {
-        if (err) return reject(err)
+  if (existente.length > 0) {
+    throw new Error("Horário já ocupado");
+  }
 
-        if (results.length > 0) {
-          return reject(new Error('Horário já ocupado'))
-        }
+  const [result] = await connection.query(
+    `INSERT INTO agendamentos 
+     (paciente_id, profissional_id, data, hora, status) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [paciente_id, profissional_id, data, hora, status || "agendado"]
+  );
 
-        // Insert
-        connection.query(
-          `INSERT INTO agendamentos 
-           (paciente_id, profissional_id, data, hora, status) 
-           VALUES (?, ?, ?, ?, ?)`,
-          [paciente_id, profissional_id, data, hora, status || "agendado"],
-          (err, result) => {
-            if (err) return reject(err)
+  return {
+    id: result.insertId,
+    ...agendamento
+  };
+};
 
-            resolve({
-              id: result.insertId,
-              ...agendamento
-            })
-          }
-        )
-      }
-    )
-  })
-}
 
-// Lista com Join
-exports.getAll = () => {
-  return new Promise((resolve, reject) => {
-    connection.query(
-      `SELECT 
-        a.*,
-        p.nome AS paciente_nome,
-        u.nome AS profissional_nome
-      FROM agendamentos a
-      JOIN pacientes p ON p.id = a.paciente_id
-      JOIN usuarios u ON u.id = a.profissional_id`,
-      (err, results) => {
-        if (err) return reject(err)
-        resolve(results)
-      }
-    )
-  })
-}
 
-// Atualizar
-exports.update = (id, agendamento) => {
-  return new Promise((resolve, reject) => {
+// 🔹 LISTAR AGENDAMENTOS (COM NOMES)
+exports.getAll = async () => {
+  const [rows] = await connection.query(`
+    SELECT 
+      a.id,
+      a.data,
+      a.hora,
+      a.status,
+      a.paciente_id,
+      a.profissional_id,
 
-    const { paciente_id, profissional_id, data, hora, status } = agendamento
+      p.nome AS paciente_nome,
+      u.nome AS profissional_nome
 
-    connection.query(
-      `UPDATE agendamentos 
-       SET paciente_id=?, profissional_id=?, data=?, hora=?, status=? 
-       WHERE id=?`,
-      [paciente_id, profissional_id, data, hora, status, id],
-      (err) => {
-        if (err) return reject(err)
+    FROM agendamentos a
 
-        resolve({ message: "Atualizado com sucesso" })
-      }
-    )
-  })
-}
+    LEFT JOIN pacientes p 
+      ON p.id = a.paciente_id
 
-// Deletar
-exports.delete = (id) => {
-  return new Promise((resolve, reject) => {
+    LEFT JOIN users u 
+      ON u.id = a.profissional_id
 
-    connection.query(
-      `DELETE FROM agendamentos WHERE id=?`,
-      [id],
-      (err) => {
-        if (err) return reject(err)
+    ORDER BY a.data ASC, a.hora ASC
+  `);
 
-        resolve({ message: "Excluído com sucesso" })
-      }
-    )
-  })
-}
+  return rows;
+};
+
+
+
+// 🔹 ATUALIZAR
+exports.update = async (id, agendamento) => {
+  const { paciente_id, profissional_id, data, hora, status } = agendamento;
+
+  await connection.query(
+    `UPDATE agendamentos 
+     SET paciente_id=?, profissional_id=?, data=?, hora=?, status=? 
+     WHERE id=?`,
+    [paciente_id, profissional_id, data, hora, status, id]
+  );
+
+  return { message: "Atualizado com sucesso" };
+};
+
+
+// DELETAR
+exports.delete = async (id) => {
+  await connection.query(
+    `DELETE FROM agendamentos WHERE id=?`,
+    [id]
+  );
+
+  return { message: "Excluído com sucesso" };
+};

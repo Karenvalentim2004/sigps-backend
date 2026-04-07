@@ -1,68 +1,49 @@
 const connection = require('../database/db')
 const bcrypt = require('bcrypt')
-
-exports.register = (nome, email, senha, identificar) => {
-    return new Promise(async (resolve, reject) => {
-
-        const hashedsenha = await bcrypt.hash(senha, 10)
-
-        connection.query(
-            'INSERT INTO users (nome, email, senha, identificar) VALUES (?, ?, ?, ?)',
-            [nome, email, hashedsenha, identificar],
-            (err, result) => {
-                if (err) return reject(err)
-
-                resolve({
-                    id: result.insertId,
-                    nome,
-                    email,
-                    identificar
-                })
-            }
-        )
-    })
-}
-
-
 const jwt = require('jsonwebtoken')
 
-exports.login = (email, senha) => {
-    return new Promise((resolve, reject) => {
+exports.register = async (nome, email, senha, identificar) => {
+  const hashed = await bcrypt.hash(senha, 10);
 
-        connection.query(
-            'SELECT * FROM users WHERE email = ?',
-            [email],
-            async (err, results) => {
-                if (err) return reject(err)
+  const [result] = await connection.query(
+    'INSERT INTO users (nome, email, senha, identificar) VALUES (?, ?, ?, ?)',
+    [nome, email, hashed, identificar]
+  );
 
-                if (results.length === 0) {
-                    return reject(new Error('Usuário não encontrado'))
-                }
+  return { id: result.insertId, nome, email, identificar };
+};
 
-                const user = results[0]
+exports.login = async (email, senha) => {
+  const [users] = await connection.query(
+    'SELECT * FROM users WHERE email = ?',
+    [email]
+  );
 
-                const senhaValida = await bcrypt.compare(senha, user.senha)
+  if (users.length === 0) {
+    throw new Error('Usuário não encontrado');
+  }
 
-                if (!senhaValida) {
-                    return reject(new Error('Senha inválida'))
-                }
+  const user = users[0];
 
-                const token = jwt.sign(
-                    { id: user.id, identificar: user.identificar },
-                    'segredo', // depois vamos melhorar isso
-                    { expiresIn: '1d' }
-                )
+  const senhaValida = await bcrypt.compare(senha, user.senha);
 
-                resolve({
-                    token,
-                    user: {
-                        id: user.id,
-                        nome: user.nome,
-                        email: user.email,
-                        identificar: user.identificar
-                    }
-                })
-            }
-        )
-    })
-}
+  if (!senhaValida) {
+    throw new Error('Senha inválida');
+  }
+
+  const token = jwt.sign(
+    { id: user.id, identificar: user.identificar },
+    'segredo',
+    { expiresIn: '1d' }
+  );
+
+  return {
+    token,
+    user: {
+      id: user.id,
+      nome: user.nome,
+      email: user.email,
+      identificar: user.identificar
+    }
+  };
+};

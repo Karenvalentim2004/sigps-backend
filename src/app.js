@@ -12,6 +12,7 @@ const pacienteRoutes = require('./routes/paciente.routes')
 const agendamentoRoutes = require('./routes/agendamento.routes')
 const prontuarioRoutes = require('./routes/prontuario.routes')
 const relatorioRoutes = require('./routes/relatorio.routes')
+const usuarioRoutes = require("./routes/usuario.routes");
 
 
 app.use('/api', authRoutes)
@@ -20,6 +21,8 @@ app.use('/api/pacientes', pacienteRoutes)
 app.use('/api/agendamentos', agendamentoRoutes)
 app.use('/api/prontuarios', prontuarioRoutes)
 app.use('/api/relatorios', relatorioRoutes)
+// app.use("/api/usuarios", usuarioRoutes);
+app.use("/api", usuarioRoutes);
 
 module.exports = app  
  

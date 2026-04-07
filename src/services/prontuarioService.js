@@ -1,21 +1,14 @@
 const connection = require('../database/db')
 
-exports.create = (dados) => {
-    return new Promise((resolve, reject) => {
+exports.create = async (dados) => {
+  const { paciente_id, medico_id, sintomas, diagnostico, prescricao } = dados;
 
-        const { paciente_id, medico_id, sintomas, diagnostico, prescricao } = dados
+  const [result] = await connection.query(
+    `INSERT INTO prontuarios 
+     (paciente_id, medico_id, sintomas, diagnostico, prescricao) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [paciente_id, medico_id, sintomas, diagnostico, prescricao]
+  );
 
-        connection.query(
-            'INSERT INTO prontuarios (paciente_id, medico_id, sintomas, diagnostico, prescricao) VALUES (?, ?, ?, ?, ?)',
-            [paciente_id, medico_id, sintomas, diagnostico, prescricao],
-            (err, result) => {
-                if (err) return reject(err)
-
-                resolve({
-                    id: result.insertId,
-                    ...dados
-                })
-            }
-        )
-    })
-}
+  return { id: result.insertId, ...dados };
+};

@@ -1,75 +1,56 @@
 const connection = require('../database/db')
 
-// Criar paciente
-exports.create = (paciente) => {
-    return new Promise((resolve, reject) => {
-        const { nome, email, cpf, data_nascimento, telefone, endereco } = paciente
+// Criar
+exports.create = async (paciente) => {
+  const { nome, email, cpf, data_nascimento, telefone, endereco } = paciente;
 
-        connection.query(
-            'INSERT INTO pacientes (nome, email, cpf, data_nascimento, telefone, endereco) VALUES (?, ?, ?, ?, ?, ?)',
-            [nome, email, cpf, data_nascimento, telefone, endereco],
-            (err, result) => {
-                if (err) return reject(err)
-                console.dir(result)
-                resolve({ id: result.insertId, ...paciente })
-            }
-        )
-    })
-}
+  const [result] = await connection.query(
+    `INSERT INTO pacientes 
+     (nome, email, cpf, data_nascimento, telefone, endereco) 
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [nome, email, cpf, data_nascimento, telefone, endereco]
+  );
 
-// Listar pacientes
-exports.findAll = () => {
-    return new Promise((resolve, reject) => {
-        connection.query(
-            'SELECT * FROM pacientes WHERE ativo = TRUE',
-            (err, results) => {
-                if (err) return reject(err)
-                resolve(results)
-            }
-        )
-    })
-}
+  return { id: result.insertId, ...paciente };
+};
+
+// Listar
+exports.findAll = async () => {
+  const [rows] = await connection.query(
+    'SELECT * FROM pacientes WHERE ativo = TRUE'
+  );
+  return rows;
+};
 
 // Buscar por ID
-exports.findById = (id) => {
-    return new Promise((resolve, reject) => {
-        connection.query(
-            'SELECT * FROM pacientes WHERE id = ? AND ativo = TRUE',
-            [id],
-            (err, results) => {
-                if (err) return reject(err)
-                resolve(results[0])
-            }
-        )
-    })
-}
+exports.findById = async (id) => {
+  const [rows] = await connection.query(
+    'SELECT * FROM pacientes WHERE id = ? AND ativo = TRUE',
+    [id]
+  );
+  return rows[0];
+};
 
 // Atualizar
-exports.update = (id, paciente) => {
-    return new Promise((resolve, reject) => {
-        const { nome, email, telefone, endereco } = paciente
+exports.update = async (id, paciente) => {
+  const { nome, email, telefone, endereco } = paciente;
 
-        connection.query(
-            'UPDATE pacientes SET nome = ?, email = ?, telefone = ?, endereco = ? WHERE id = ?',
-            [nome, email, telefone, endereco, id],
-            (err) => {
-                if (err) return reject(err)
-                resolve({ id, ...paciente })
-            }
-        )
-    })
-}
+  await connection.query(
+    `UPDATE pacientes 
+     SET nome=?, email=?, telefone=?, endereco=? 
+     WHERE id=?`,
+    [nome, email, telefone, endereco, id]
+  );
 
-//delete
-exports.remove = (id) => {
-    return new Promise((resolve, reject) => {
-        connection.query(
-            'UPDATE pacientes SET ativo = FALSE WHERE id = ?',
-            [id],
-            (err) => {
-                if (err) return reject(err)
-                resolve({ message: 'Paciente desativado' })
-            }
-        )
-    })
-}
+  return { id, ...paciente };
+};
+
+// Deletar (soft delete)
+exports.remove = async (id) => {
+  await connection.query(
+    'UPDATE pacientes SET ativo = FALSE WHERE id = ?',
+    [id]
+  );
+
+  return { message: 'Paciente desativado' };
+};
