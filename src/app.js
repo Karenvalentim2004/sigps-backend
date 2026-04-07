@@ -7,6 +7,7 @@ app.use(cors());
 
 // Importando rotas
 const authRoutes = require('./routes/auth.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 const pacienteRoutes = require('./routes/paciente.routes')
 const agendamentoRoutes = require('./routes/agendamento.routes')
 const prontuarioRoutes = require('./routes/prontuario.routes')
@@ -14,6 +15,7 @@ const relatorioRoutes = require('./routes/relatorio.routes')
 
 
 app.use('/api', authRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/pacientes', pacienteRoutes)
 app.use('/api/agendamentos', agendamentoRoutes)
 app.use('/api/prontuarios', prontuarioRoutes)
